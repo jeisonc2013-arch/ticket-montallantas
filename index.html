@@ -74,7 +74,6 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold uppercase text-brandGray mb-1">Placa del Vehículo</label>
-                            <!-- Mejora 1: Formateo automático a mayúsculas -->
                             <input type="text" id="placa" placeholder="Ej. ABC-123" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm uppercase focus:ring-2 focus:ring-brandYellow outline-none" oninput="this.value = this.value.toUpperCase()">
                         </div>
                     </div>
@@ -110,10 +109,13 @@
                 </form>
             </div>
 
-            <!-- BOTÓN UNIFICADO -->
-            <div class="mt-6 pt-4 border-t border-gray-100">
-                <button type="button" onclick="guardarYDescargarTicket()" class="w-full bg-brandYellow text-brandDark font-bold py-3 px-4 rounded-xl shadow-md hover:bg-amber-400 transition flex items-center justify-center gap-2 text-base">
-                    💾 Guardar y Descargar Ticket PDF
+            <!-- BOTONES DE ACCIÓN (GUARDAR+PDF Y WHATSAPP) -->
+            <div class="mt-6 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button type="button" onclick="guardarYDescargarTicket()" class="w-full bg-brandYellow text-brandDark font-bold py-3 px-4 rounded-xl shadow-md hover:bg-amber-400 transition flex items-center justify-center gap-2 text-sm">
+                    💾 Guardar y PDF
+                </button>
+                <button type="button" onclick="enviarPorWhatsApp()" class="w-full bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:bg-emerald-700 transition flex items-center justify-center gap-2 text-sm">
+                    📱 Enviar WhatsApp
                 </button>
             </div>
         </section>
@@ -184,7 +186,7 @@
         </section>
     </main>
 
-    <!-- MODAL DE HISTORIAL CON BUSCADOR INSTANTÁNEO Y BACKUP (MEJORA 2 Y 4) -->
+    <!-- MODAL DE HISTORIAL -->
     <div id="modalHistorial" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-4 pb-2 border-b">
@@ -192,7 +194,7 @@
                 <button onclick="cerrarModalHistorial()" class="text-gray-400 hover:text-black font-bold text-lg">&times;</button>
             </div>
 
-            <!-- CONTROLES DE FILTRADO, BÚSQUEDA Y BACKUP -->
+            <!-- CONTROLES -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4 bg-gray-50 p-3 rounded-xl border items-end">
                 <div>
                     <label class="block text-[10px] uppercase font-bold text-brandGray mb-1">Desde</label>
@@ -211,7 +213,7 @@
                 </div>
             </div>
 
-            <!-- BOTONES DE ACCIÓN DE DATOS (EXCEL Y BACKUP JSON) -->
+            <!-- BOTONES DE ACCIÓN -->
             <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
                 <div class="flex gap-2">
                     <button onclick="exportarExcel()" class="bg-emerald-600 text-white text-xs font-bold py-2 px-3 rounded-lg hover:bg-emerald-700 flex items-center gap-1">
@@ -422,6 +424,45 @@
                 agregarItem();
                 actualizarVistaPrevia();
             });
+        }
+
+        // FUNCIÓN DE ENVÍO RÁPIDO POR WHATSAPP (OPCIÓN 3)
+        function enviarPorWhatsApp() {
+            const ticketId = document.getElementById('lblConsecutivo').innerText;
+            const fecha = document.getElementById('fecha').value;
+            const ciudad = document.getElementById('ciudad').value;
+            const cliente = document.getElementById('cliente').value;
+            const placa = document.getElementById('placa').value.toUpperCase();
+            const km = document.getElementById('kilometraje').value;
+            const asesor = document.getElementById('asesor').value;
+            const obs = document.getElementById('observaciones').value.trim();
+            const items = obtenerItems();
+
+            if(!placa || items.length === 0) {
+                alert("Completa al menos la placa y selecciona un servicio para enviar por WhatsApp.");
+                return;
+            }
+
+            let detalleServicios = items.map(i => `• ${i.tipo} (${i.unidades} unid.)`).join('%0A');
+            
+            let mensaje = `*MERQUELLANTAS & MERQUEPRO*%0A`;
+            mensaje += `*Control de Servicios - ${ticketId}*%0A%0A`;
+            mensaje += `📅 *Fecha:* ${fecha}%0A`;
+            mensaje += `🏙️ *Ciudad:* ${ciudad}%0A`;
+            mensaje += `👤 *Cliente:* ${cliente}%0A`;
+            mensaje += `🚗 *Placa:* ${placa}%0A`;
+            mensaje += `🛣️ *Kilometraje:* ${km ? km + ' Km' : 'N/A'}%0A`;
+            mensaje += `👨‍💼 *Asesor:* ${asesor || 'N/A'}%0A%0A`;
+            mensaje += `📋 *Servicios Realizados:*%0A${detalleServicios}%0A`;
+            
+            if(obs) {
+                mensaje += `%0A📝 *Observaciones:* ${obs}%0A`;
+            }
+
+            mensaje += `%0A_¡Gracias por confiar en nuestros servicios!_`;
+
+            const urlWhatsApp = `https://api.whatsapp.com/send?text=${mensaje}`;
+            window.open(urlWhatsApp, '_blank');
         }
 
         function ejecutarDescargaPDF(data, callbackExito) {
