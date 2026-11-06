@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- jsPDF para generación vectorial nítida de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -51,7 +53,7 @@
                         <span class="bg-brandYellow text-brandDark px-2 py-0.5 rounded text-sm">1</span> Datos del Servicio
                     </h2>
                     <span class="text-xs font-bold text-brandDark bg-amber-100 px-2.5 py-1 rounded border border-brandYellow">
-                        N° <span id="lblConsecutivo">TKT-1001</span>
+                        N° <span id="lblConsecutivo">Cargando...</span>
                     </span>
                 </div>
 
@@ -213,21 +215,11 @@
                 </div>
             </div>
 
-            <!-- BOTONES DE ACCIÓN -->
-            <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
-                <div class="flex gap-2">
-                    <button onclick="exportarExcel()" class="bg-emerald-600 text-white text-xs font-bold py-2 px-3 rounded-lg hover:bg-emerald-700 flex items-center gap-1">
-                        📥 Exportar Excel (Filtrado)
-                    </button>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="exportarBackupJSON()" class="bg-brandDark text-brandYellow text-xs font-bold py-2 px-3 rounded-lg hover:bg-black">
-                        💾 Backup JSON
-                    </button>
-                    <label class="bg-brandGray text-white text-xs font-bold py-2 px-3 rounded-lg hover:bg-gray-600 cursor-pointer">
-                        📂 Restaurar JSON <input type="file" id="importFile" accept=".json" onchange="importarBackupJSON(event)" class="hidden">
-                    </label>
-                </div>
+            <div class="flex justify-between items-center mb-3">
+                <button onclick="exportarExcel()" class="bg-emerald-600 text-white text-xs font-bold py-2 px-3 rounded-lg hover:bg-emerald-700 flex items-center gap-1">
+                    📥 Exportar Excel (Filtrado)
+                </button>
+                <span id="lblEstadoConexion" class="text-xs text-emerald-600 font-bold">🟢 Conectado a Supabase</span>
             </div>
 
             <!-- Tabla -->
@@ -254,8 +246,14 @@
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL -->
+    <!-- SCRIPT PRINCIPAL SUPABASE -->
     <script>
+        // CONFIGURACIÓN DE SUPABASE (REEMPLAZA ESTOS VALORES)
+        const SUPABASE_URL = "https://xeqrhhbllizilcgugxra.supabase.co/rest/v1/";
+        const SUPABASE_ANON_KEY = "sb_publishable_IG7Bx2FKhE03ZwQaLGZDaQ_--Oukflq";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         const SERVICIOS_DISPONIBLES = [
             "Montaje Camion",
             "Montaje Automovil",
@@ -269,23 +267,39 @@
             "Inspeccion de llantas",
             "Inspeccion de Baterias",
             "Balanceo Automovil",
-            "Marcación de Llantas",
-            "Regrabación"
+            "Marcación de Llantas",
+            "Regrabación"
         ];
 
+        let datosGlobalesTickets = [];
         let datosFiltradosActuales = [];
+        let siguienteConsecutivoNum = 1001;
 
         document.getElementById('fecha').valueAsDate = new Date();
 
-        function obtenerSiguienteId() {
-            let ultimoId = parseInt(localStorage.getItem('consecutivo_ticket') || '1000');
-            return ultimoId + 1;
-        }
+        // CONSULTAR CONSECUTIVO EN TIEMPO REAL DESDE SUPABASE
+        async function actualizarConsecutivoSupabase() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('tickets')
+                    .select('ticket_id')
+                    .order('id', { ascending: false })
+                    .limit(1);
 
-        function actualizarConsecutivoPantalla() {
-            const idActual = `TKT-${obtenerSiguienteId()}`;
-            document.getElementById('lblConsecutivo').innerText = idActual;
-            document.getElementById('prevTicketId').innerText = idActual;
+                if (data && data.length > 0) {
+                    const ultimoTicket = data[0].ticket_id;
+                    const numero = parseInt(ultimoTicket.replace('TKT-', '')) || 1000;
+                    siguienteConsecutivoNum = numero + 1;
+                } else {
+                    siguienteConsecutivoNum = 1001;
+                }
+
+                const idStr = `TKT-${siguienteConsecutivoNum}`;
+                document.getElementById('lblConsecutivo').innerText = idStr;
+                document.getElementById('prevTicketId').innerText = idStr;
+            } catch (err) {
+                console.error("Error al obtener consecutivo:", err);
+            }
         }
 
         const inputs = ['fecha', 'ciudad', 'cliente', 'placa', 'kilometraje', 'asesor', 'observaciones'];
@@ -293,9 +307,9 @@
             document.getElementById(id).addEventListener('input', actualizarVistaPrevia);
         });
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             agregarItem();
-            actualizarConsecutivoPantalla();
+            await actualizarConsecutivoSupabase();
             actualizarVistaPrevia();
         });
 
@@ -390,7 +404,8 @@
             xhr.send();
         }
 
-        function guardarYDescargarTicket() {
+        // GUARDAR EN SUPABASE EN TIEMPO REAL Y DESCARGAR PDF
+        async function guardarYDescargarTicket() {
             const placa = document.getElementById('placa').value.toUpperCase();
             const items = obtenerItems();
 
@@ -399,37 +414,53 @@
                 return;
             }
 
-            const nextNum = obtenerSiguienteId();
-            const ticketId = `TKT-${nextNum}`;
+            await actualizarConsecutivoSupabase();
+            const ticketId = `TKT-${siguienteConsecutivoNum}`;
 
             const servicioData = {
-                ticketId: ticketId,
+                ticket_id: ticketId,
                 fecha: document.getElementById('fecha').value,
                 ciudad: document.getElementById('ciudad').value,
                 cliente: document.getElementById('cliente').value,
                 placa: placa,
-                kilometraje: document.getElementById('kilometraje').value,
+                kilometraje: document.getElementById('kilometraje').value ? parseFloat(document.getElementById('kilometraje').value) : null,
                 asesor: document.getElementById('asesor').value,
                 observaciones: document.getElementById('observaciones').value,
                 items: items
             };
 
-            let historial = JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
-            historial.push(servicioData);
-            localStorage.setItem('historial_merquellantas', JSON.stringify(historial));
-            localStorage.setItem('consecutivo_ticket', nextNum.toString());
+            // Insertar en Supabase
+            const { error } = await supabaseClient.from('tickets').insert([servicioData]);
 
-            ejecutarDescargaPDF(servicioData, () => {
+            if (error) {
+                console.error("Error al guardar en Supabase:", error);
+                alert("Ocurrió un error al guardar en la nube. Revisa tu conexión.");
+                return;
+            }
+
+            // Preparar objeto para PDF
+            const dataParaPDF = {
+                ticketId: ticketId,
+                fecha: servicioData.fecha,
+                ciudad: servicioData.ciudad,
+                cliente: servicioData.cliente,
+                placa: servicioData.placa,
+                kilometraje: servicioData.kilometraje,
+                asesor: servicioData.asesor,
+                observaciones: servicioData.observaciones,
+                items: items
+            };
+
+            ejecutarDescargaPDF(dataParaPDF, async () => {
                 document.getElementById('serviceForm').reset();
                 document.getElementById('fecha').valueAsDate = new Date();
                 document.getElementById('itemsContainer').innerHTML = '';
-                actualizarConsecutivoPantalla();
+                await actualizarConsecutivoSupabase();
                 agregarItem();
                 actualizarVistaPrevia();
             });
         }
 
-        // FUNCIÓN DE ENVÍO RÁPIDO POR WHATSAPP (OPCIÓN 3)
         function enviarPorWhatsApp() {
             const ticketId = document.getElementById('lblConsecutivo').innerText;
             const fecha = document.getElementById('fecha').value;
@@ -513,7 +544,7 @@
                         doc.setFont("helvetica", "bold");
                         doc.text(label, 8, y);
                         doc.setFont("helvetica", "normal");
-                        doc.text(valor || '-', 38, y);
+                        doc.text(String(valor || '-'), 38, y);
                         y += 5.5;
                     };
 
@@ -573,9 +604,19 @@
             });
         }
 
-        function abrirModalHistorial() {
+        async function abrirModalHistorial() {
             document.getElementById('modalHistorial').classList.remove('hidden');
             document.getElementById('modalHistorial').classList.add('flex');
+            
+            // Cargar datos frescos de Supabase
+            const { data, error } = await supabaseClient
+                .from('tickets')
+                .select('*')
+                .order('id', { ascending: false });
+
+            if (!error && data) {
+                datosGlobalesTickets = data;
+            }
             aplicarFiltrosYBusqueda();
         }
 
@@ -589,7 +630,7 @@
             const hasta = document.getElementById('filtroHasta').value;
             const textoBusqueda = document.getElementById('buscadorTexto').value.toUpperCase().trim();
             
-            let historial = JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
+            let historial = [...datosGlobalesTickets];
 
             if(desde && hasta) {
                 historial = historial.filter(reg => reg.fecha >= desde && reg.fecha <= hasta);
@@ -600,7 +641,7 @@
                     const placa = (reg.placa || '').toUpperCase();
                     const cliente = (reg.cliente || '').toUpperCase();
                     const asesor = (reg.asesor || '').toUpperCase();
-                    const ticketId = (reg.ticketId || '').toUpperCase();
+                    const ticketId = (reg.ticket_id || '').toUpperCase();
                     return placa.includes(textoBusqueda) || cliente.includes(textoBusqueda) || asesor.includes(textoBusqueda) || ticketId.includes(textoBusqueda);
                 });
             }
@@ -620,10 +661,11 @@
 
             let html = '';
             historial.forEach(reg => {
-                let descItems = reg.items.map(i => `${i.tipo} (${i.unidades})`).join(', ');
+                let itemsList = Array.isArray(reg.items) ? reg.items : JSON.parse(reg.items || '[]');
+                let descItems = itemsList.map(i => `${i.tipo} (${i.unidades})`).join(', ');
                 html += `
                     <tr class="hover:bg-gray-50 border-b border-gray-100">
-                        <td class="p-2.5 font-bold text-amber-600">${reg.ticketId || '-'}</td>
+                        <td class="p-2.5 font-bold text-amber-600">${reg.ticket_id || '-'}</td>
                         <td class="p-2.5 font-medium">${reg.fecha}</td>
                         <td class="p-2.5 font-bold">${reg.placa}</td>
                         <td class="p-2.5">${reg.cliente}</td>
@@ -653,7 +695,7 @@
             let csvContent = "data:text/csv;charset=utf-8,ID Ticket,Fecha,Ciudad,Cliente,Placa,Kilometraje,Asesor Comercial,Servicio,Unidades,Observaciones\r\n";
             
             datosAExportar.forEach(reg => {
-                let tId = reg.ticketId || '';
+                let tId = reg.ticket_id || '';
                 let f = reg.fecha || '';
                 let c = reg.ciudad || '';
                 let cli = `"${(reg.cliente || '').replace(/"/g, '""')}"`;
@@ -662,7 +704,8 @@
                 let ase = `"${(reg.asesor || '').replace(/"/g, '""')}"`;
                 let obs = `"${(reg.observaciones || '').replace(/"/g, '""')}"`;
 
-                reg.items.forEach(item => {
+                let itemsList = Array.isArray(reg.items) ? reg.items : JSON.parse(reg.items || '[]');
+                itemsList.forEach(item => {
                     let servNombre = `"${item.tipo.replace(/"/g, '""')}"`;
                     let servUnidades = item.unidades;
                     let row = [tId, f, c, cli, p, km, ase, servNombre, servUnidades, obs];
@@ -677,47 +720,6 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        }
-
-        function exportarBackupJSON() {
-            let historial = localStorage.getItem('historial_merquellantas') || '[]';
-            let consecutivo = localStorage.getItem('consecutivo_ticket') || '1000';
-            
-            const backupData = {
-                consecutivo: consecutivo,
-                historial: JSON.parse(historial)
-            };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `backup_merquellantas_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importarBackupJSON(event) {
-            const fileReader = new FileReader();
-            if (event.target.files[0]) {
-                fileReader.readAsText(event.target.files[0], "UTF-8");
-                fileReader.onload = function(e) {
-                    try {
-                        const parsed = JSON.parse(e.target.result);
-                        if (parsed.historial && parsed.consecutivo) {
-                            localStorage.setItem('historial_merquellantas', JSON.stringify(parsed.historial));
-                            localStorage.setItem('consecutivo_ticket', parsed.consecutivo);
-                            alert("¡Copia de seguridad restaurada exitosamente!");
-                            actualizarConsecutivoPantalla();
-                            aplicarFiltrosYBusqueda();
-                        } else {
-                            alert("El archivo no tiene el formato de respaldo correcto.");
-                        }
-                    } catch (error) {
-                        alert("Error al leer el archivo JSON.");
-                    }
-                };
-            }
         }
     </script>
 </body>
