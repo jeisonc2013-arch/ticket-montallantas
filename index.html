@@ -111,12 +111,10 @@
                 </form>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-gray-100 flex gap-3">
-                <button type="button" onclick="generarYDescargarPDF()" class="flex-1 bg-brandYellow text-brandDark font-bold py-3 px-4 rounded-xl shadow hover:bg-amber-400 transition flex items-center justify-center gap-2">
-                    📥 Descargar Ticket PDF
-                </button>
-                <button type="button" onclick="guardarRegistro()" class="bg-brandDark text-white font-bold py-3 px-4 rounded-xl shadow hover:bg-black transition">
-                    💾 Guardar Ticket
+            <!-- UN SOLO BOTÓN QUE GUARDA Y DESCARGA -->
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <button type="button" onclick="guardarYDescargarTicket()" class="w-full bg-brandYellow text-brandDark font-bold py-3 px-4 rounded-xl shadow-md hover:bg-amber-400 transition flex items-center justify-center gap-2 text-base">
+                    💾 Guardar y Descargar Ticket PDF
                 </button>
             </div>
         </section>
@@ -131,7 +129,6 @@
                     <span class="text-xs bg-brandLight text-brandGray px-2 py-1 rounded font-medium">Control Interno</span>
                 </div>
 
-                <!-- TICKET PREVIEW DISEÑO LIMPIO Y ELEGANTE -->
                 <div id="ticketPreview" class="border border-gray-200 bg-white p-5 rounded-xl font-sans text-xs space-y-3 shadow-sm">
                     <div class="text-center pb-3 border-b border-gray-200">
                         <div class="flex justify-center items-center gap-3 mb-3 bg-white p-2 rounded-lg border border-gray-100 max-w-[240px] mx-auto">
@@ -197,7 +194,7 @@
             </div>
 
             <!-- Filtros -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 bg-gray-50 p-3 rounded-xl border">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4 bg-gray-50 p-3 rounded-xl border items-end">
                 <div>
                     <label class="block text-[10px] uppercase font-bold text-brandGray mb-1">Desde</label>
                     <input type="date" id="filtroDesde" class="w-full border rounded-lg p-2 text-xs">
@@ -206,9 +203,12 @@
                     <label class="block text-[10px] uppercase font-bold text-brandGray mb-1">Hasta</label>
                     <input type="date" id="filtroHasta" class="w-full border rounded-lg p-2 text-xs">
                 </div>
-                <div class="flex items-end gap-2">
+                <div class="flex gap-2">
                     <button onclick="filtrarHistorial()" class="flex-1 bg-brandDark text-brandYellow text-xs font-bold py-2 rounded-lg hover:bg-black">Filtrar</button>
-                    <button onclick="exportarExcel()" class="flex-1 bg-emerald-600 text-white text-xs font-bold py-2 rounded-lg hover:bg-emerald-700">📥 Exportar Excel</button>
+                    <button onclick="limpiarFiltro()" class="bg-gray-200 text-brandDark text-xs font-bold px-3 py-2 rounded-lg hover:bg-gray-300">Limpiar</button>
+                </div>
+                <div>
+                    <button onclick="exportarExcel()" class="w-full bg-emerald-600 text-white text-xs font-bold py-2 rounded-lg hover:bg-emerald-700">📥 Exportar Excel</button>
                 </div>
             </div>
 
@@ -250,6 +250,9 @@
             "Inspeccion de llantas",
             "Inspeccion de Baterias"
         ];
+
+        // Variable global para mantener referencia a la lista filtrada actual
+        let datosFiltradosActuales = null;
 
         document.getElementById('fecha').valueAsDate = new Date();
 
@@ -366,46 +369,70 @@
             xhr.send();
         }
 
-        // GENERACIÓN VECTORIAL DEL PDF SIN RECUADROS PESADOS Y CON ESPACIADO PERFECTO
-        function generarYDescargarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ unit: 'mm', format: [90, 160] });
-
-            const ticketId = document.getElementById('lblConsecutivo').innerText;
-            const fecha = document.getElementById('fecha').value;
-            const ciudad = document.getElementById('ciudad').value;
-            const cliente = document.getElementById('cliente').value;
+        // FUNCIÓN QUE UNIFICA GUARDAR Y DESCARGAR PDF
+        function guardarYDescargarTicket() {
             const placa = document.getElementById('placa').value.toUpperCase();
-            const km = document.getElementById('kilometraje').value;
-            const asesor = document.getElementById('asesor').value;
-            const obs = document.getElementById('observaciones').value.trim();
             const items = obtenerItems();
 
             if(!placa || items.length === 0) {
-                alert("Completa la placa y al menos un servicio antes de generar el PDF.");
+                alert("Completa al menos la placa y selecciona un servicio antes de procesar.");
                 return;
             }
+
+            const nextNum = obtenerSiguienteId();
+            const ticketId = `TKT-${nextNum}`;
+
+            const servicioData = {
+                ticketId: ticketId,
+                fecha: document.getElementById('fecha').value,
+                ciudad: document.getElementById('ciudad').value,
+                cliente: document.getElementById('cliente').value,
+                placa: placa,
+                kilometraje: document.getElementById('kilometraje').value,
+                asesor: document.getElementById('asesor').value,
+                observaciones: document.getElementById('observaciones').value,
+                items: items
+            };
+
+            // 1. Guardar en localStorage
+            let historial = JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
+            historial.push(servicioData);
+            localStorage.setItem('historial_merquellantas', JSON.stringify(historial));
+            localStorage.setItem('consecutivo_ticket', nextNum.toString());
+
+            // 2. Generar y descargar PDF
+            ejecutarDescargaPDF(servicioData, () => {
+                // 3. Resetear formulario tras éxito
+                document.getElementById('serviceForm').reset();
+                document.getElementById('fecha').valueAsDate = new Date();
+                document.getElementById('itemsContainer').innerHTML = '';
+                actualizarConsecutivoPantalla();
+                agregarItem();
+                actualizarVistaPrevia();
+            });
+        }
+
+        function ejecutarDescargaPDF(data, callbackExito) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: [90, 160] });
 
             toDataURL('LOGO MERQUELLANTAS sobre blanco.png', function(logo1Data) {
                 toDataURL('logo merquepro.png', function(logo2Data) {
                     
-                    // Fondo completamente limpio
                     doc.setFillColor(255, 255, 255);
                     doc.rect(0, 0, 90, 160, 'F');
 
                     let y = 10;
 
-                    // DIBUJAR LOGOS LIMPIOS SIN RECUADROS EXCESIVOS
                     try {
                         doc.addImage(logo1Data, 'PNG', 12, y, 28, 10);
                         doc.addImage(logo2Data, 'PNG', 50, y, 28, 10);
                     } catch(e) {
-                        console.log("No se pudieron cargar los logos:", e);
+                        console.log("Logos no cargados en PDF:", e);
                     }
 
-                    y += 15; // Espaciado vertical asegurado para evitar sobreposición
+                    y += 15;
 
-                    // TÍTULO DEL TICKET
                     doc.setFont("helvetica", "bold");
                     doc.setFontSize(11);
                     doc.setTextColor(34, 31, 31);
@@ -415,15 +442,13 @@
                     doc.setFontSize(8.5);
                     doc.setFont("helvetica", "normal");
                     doc.setTextColor(120, 120, 120);
-                    doc.text(`${ticketId}  |  ${fecha}`, 45, y, { align: "center" });
+                    doc.text(`${data.ticketId}  |  ${data.fecha}`, 45, y, { align: "center" });
 
                     y += 4;
-                    // Línea fina amarilla corporativa de separación
                     doc.setDrawColor(245, 169, 11);
                     doc.setLineWidth(0.6);
                     doc.line(8, y, 82, y);
 
-                    // DATOS PRINCIPALES DEL CLIENTE / VEHÍCULO
                     y += 7;
                     doc.setFontSize(9);
                     doc.setTextColor(34, 31, 31);
@@ -436,11 +461,11 @@
                         y += 5.5;
                     };
 
-                    escribirLinea("Ciudad:", ciudad);
-                    escribirLinea("Cliente:", cliente);
-                    escribirLinea("Placa:", placa);
-                    escribirLinea("Kilometraje:", km ? `${km} Km` : '-');
-                    escribirLinea("Asesor:", asesor);
+                    escribirLinea("Ciudad:", data.ciudad);
+                    escribirLinea("Cliente:", data.cliente);
+                    escribirLinea("Placa:", data.placa);
+                    escribirLinea("Kilometraje:", data.kilometraje ? `${data.kilometraje} Km` : '-');
+                    escribirLinea("Asesor:", data.asesor);
 
                     y += 2;
                     doc.setDrawColor(220, 220, 220);
@@ -448,7 +473,6 @@
                     doc.line(8, y, 82, y);
                     y += 6;
 
-                    // TABLA DE SERVICIOS
                     doc.setFont("helvetica", "bold");
                     doc.text("Servicio / Descripción", 8, y);
                     doc.text("Unidades", 82, y, { align: "right" });
@@ -457,7 +481,7 @@
                     y += 5.5;
 
                     doc.setFont("helvetica", "normal");
-                    items.forEach(item => {
+                    data.items.forEach(item => {
                         doc.text(item.tipo, 8, y);
                         doc.setFont("helvetica", "bold");
                         doc.text(String(item.unidades), 82, y, { align: "right" });
@@ -469,64 +493,28 @@
                     doc.line(8, y, 82, y);
                     y += 5;
 
-                    // OBSERVACIONES
-                    if (obs) {
+                    if (data.observaciones && data.observaciones.trim()) {
                         doc.setFont("helvetica", "bold");
                         doc.text("Observaciones:", 8, y);
                         y += 4;
                         doc.setFont("helvetica", "italic");
                         doc.setFontSize(8);
-                        const splitObs = doc.splitTextToSize(obs, 74);
+                        const splitObs = doc.splitTextToSize(data.observaciones.trim(), 74);
                         doc.text(splitObs, 8, y);
                         y += (splitObs.length * 4) + 3;
                         doc.setFontSize(9);
                         doc.setFont("helvetica", "normal");
                     }
 
-                    // PIE DE PÁGINA INSTITUCIONAL
                     doc.setFontSize(7);
                     doc.setTextColor(140, 140, 140);
                     doc.text("Portal de Ingeniería & Producto", 45, 147, { align: "center" });
                     doc.text("Merquellantas & Merquepro - Control Interno", 45, 151, { align: "center" });
 
-                    doc.save(`Ticket_${ticketId}_${placa}.pdf`);
+                    doc.save(`Ticket_${data.ticketId}_${data.placa}.pdf`);
+                    if (callbackExito) callbackExito();
                 });
             });
-        }
-
-        function guardarRegistro() {
-            const nextNum = obtenerSiguienteId();
-            const ticketId = `TKT-${nextNum}`;
-
-            const servicioData = {
-                ticketId: ticketId,
-                fecha: document.getElementById('fecha').value,
-                ciudad: document.getElementById('ciudad').value,
-                cliente: document.getElementById('cliente').value,
-                placa: document.getElementById('placa').value.toUpperCase(),
-                kilometraje: document.getElementById('kilometraje').value,
-                asesor: document.getElementById('asesor').value,
-                observaciones: document.getElementById('observaciones').value,
-                items: obtenerItems()
-            };
-
-            if(!servicioData.placa || servicioData.items.length === 0) {
-                alert("Completa la placa y selecciona servicios antes de guardar.");
-                return;
-            }
-
-            let historial = JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
-            historial.push(servicioData);
-            localStorage.setItem('historial_merquellantas', JSON.stringify(historial));
-            localStorage.setItem('consecutivo_ticket', nextNum.toString());
-
-            alert(`¡Ticket ${ticketId} guardado exitosamente!`);
-            document.getElementById('serviceForm').reset();
-            document.getElementById('fecha').valueAsDate = new Date();
-            document.getElementById('itemsContainer').innerHTML = '';
-            actualizarConsecutivoPantalla();
-            agregarItem();
-            actualizarVistaPrevia();
         }
 
         function abrirModalHistorial() {
@@ -544,6 +532,9 @@
             const tbody = document.getElementById('tablaHistorialBody');
             let historial = filtrados || JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
             
+            // Guardar copia de lo que actualmente se está mostrando
+            datosFiltradosActuales = historial;
+
             if(historial.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-400 py-4">No hay registros guardados</td></tr>`;
                 return;
@@ -577,16 +568,24 @@
             cargarTablaHistorial(historial);
         }
 
+        function limpiarFiltro() {
+            document.getElementById('filtroDesde').value = '';
+            document.getElementById('filtroHasta').value = '';
+            cargarTablaHistorial();
+        }
+
+        // EXPORTACIÓN A EXCEL ADAPTATIVA (SOLO LO FILTRADO O TODO SI NO HAY FILTRO)
         function exportarExcel() {
-            let historial = JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
-            if(historial.length === 0) {
+            let datosAExportar = datosFiltradosActuales || JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
+            
+            if(datosAExportar.length === 0) {
                 alert("No hay datos para exportar.");
                 return;
             }
 
             let csvContent = "data:text/csv;charset=utf-8,ID Ticket,Fecha,Ciudad,Cliente,Placa,Kilometraje,Asesor Comercial,Servicio,Unidades,Observaciones\r\n";
             
-            historial.forEach(reg => {
+            datosAExportar.forEach(reg => {
                 let tId = reg.ticketId || '';
                 let f = reg.fecha || '';
                 let c = reg.ciudad || '';
