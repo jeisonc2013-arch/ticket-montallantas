@@ -6,9 +6,8 @@
     <title>Portal de Ingeniería & Producto - Control de Servicios</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- jsPDF & html2canvas para generación avanzada de PDF con logos -->
+    <!-- jsPDF para generación vectorial nítida de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -47,9 +46,14 @@
         <!-- COLUMNA IZQUIERDA: FORMULARIO -->
         <section class="bg-white rounded-xl shadow-md p-6 border-t-4 border-brandYellow flex flex-col justify-between">
             <div>
-                <h2 class="text-lg font-bold text-brandDark mb-4 flex items-center gap-2">
-                    <span class="bg-brandYellow text-brandDark px-2 py-0.5 rounded text-sm">1</span> Datos del Servicio
-                </h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-brandDark flex items-center gap-2">
+                        <span class="bg-brandYellow text-brandDark px-2 py-0.5 rounded text-sm">1</span> Datos del Servicio
+                    </h2>
+                    <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded border border-amber-200">
+                        N° <span id="lblConsecutivo">TKT-1001</span>
+                    </span>
+                </div>
 
                 <form id="serviceForm" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -74,12 +78,18 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-brandGray mb-1">Kilometraje (Km)</label>
-                        <input type="number" id="kilometraje" placeholder="Ej. 45000" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brandYellow outline-none">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-brandGray mb-1">Kilometraje (Km)</label>
+                            <input type="number" id="kilometraje" placeholder="Ej. 45000" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brandYellow outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-brandGray mb-1">Asesor Comercial</label>
+                            <input type="text" id="asesor" placeholder="Nombre del asesor" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brandYellow outline-none">
+                        </div>
                     </div>
 
-                    <!-- SECCIÓN DE ÍTEMS DE SERVICIO (DESPLEGABLE) -->
+                    <!-- SECCIÓN DE ÍTEMS DE SERVICIO -->
                     <div class="pt-2">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-xs font-semibold uppercase text-brandGray">Servicios Realizados</label>
@@ -93,10 +103,10 @@
                         </div>
                     </div>
 
-                    <!-- CAMPO DE OBSERVACIONES / COMENTARIOS -->
+                    <!-- CAMPO DE OBSERVACIONES -->
                     <div>
                         <label class="block text-xs font-semibold uppercase text-brandGray mb-1">Observaciones / Comentarios</label>
-                        <textarea id="observaciones" rows="2" placeholder="Notas técnicas adicionales, estado del vehículo o recomendaciones..." class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brandYellow outline-none resize-none"></textarea>
+                        <textarea id="observaciones" rows="2" placeholder="Notas técnicas adicionales..." class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brandYellow outline-none resize-none"></textarea>
                     </div>
                 </form>
             </div>
@@ -106,12 +116,12 @@
                     📥 Descargar Ticket PDF
                 </button>
                 <button type="button" onclick="guardarRegistro()" class="bg-brandDark text-white font-bold py-3 px-4 rounded-xl shadow hover:bg-black transition">
-                    💾 Guardar
+                    💾 Guardar Ticket
                 </button>
             </div>
         </section>
 
-        <!-- COLUMNA DERECHA: VISTA PREVIA DEL TICKET -->
+        <!-- COLUMNA DERECHA: VISTA PREVIA -->
         <section class="bg-white rounded-xl shadow-md p-6 border-t-4 border-brandDark flex flex-col justify-between">
             <div>
                 <div class="flex justify-between items-center mb-4">
@@ -121,52 +131,50 @@
                     <span class="text-xs bg-brandLight text-brandGray px-2 py-1 rounded font-medium">Control Interno</span>
                 </div>
 
-                <!-- CONTENEDOR DEL TICKET PARA GENERACIÓN DE PDF -->
-                <div id="ticketContainer" class="bg-white p-2">
-                    <div id="ticketPreview" class="border border-gray-300 bg-gray-50 p-4 rounded-xl font-mono text-xs space-y-3">
-                        <div class="text-center border-b border-gray-200 pb-3 bg-brandDark text-white -m-4 mb-3 p-4 rounded-t-xl border-b-4 border-brandYellow">
-                            <div class="flex justify-center items-center gap-3 mb-2 bg-white p-2 rounded-lg max-w-[220px] mx-auto">
-                                <img src="LOGO MERQUELLANTAS sobre blanco.png" alt="Logo" class="h-7 object-contain">
-                                <div class="h-6 w-px bg-gray-300"></div>
-                                <img src="logo merquepro.png" alt="Pro" class="h-7 object-contain">
-                            </div>
-                            <p class="font-bold text-sm tracking-wide text-brandYellow">CONTROL DE SERVICIOS</p>
-                            <p id="prevFecha" class="text-gray-300 text-[10px] mt-0.5"></p>
+                <!-- TICKETS PREVIEW (FORMATO LIMPIO Y LEGIBLE) -->
+                <div id="ticketPreview" class="border border-gray-300 bg-gray-50 p-4 rounded-xl font-sans text-xs space-y-3">
+                    <div class="text-center border-b border-gray-200 pb-3 bg-brandDark text-white -m-4 mb-3 p-4 rounded-t-xl border-b-4 border-brandYellow">
+                        <div class="flex justify-center items-center gap-3 mb-2 bg-white p-2 rounded-lg max-w-[220px] mx-auto">
+                            <img src="LOGO MERQUELLANTAS sobre blanco.png" alt="Logo" class="h-7 object-contain">
+                            <div class="h-6 w-px bg-gray-300"></div>
+                            <img src="logo merquepro.png" alt="Pro" class="h-7 object-contain">
                         </div>
+                        <p class="font-bold text-sm tracking-wide text-brandYellow">CONTROL DE SERVICIOS</p>
+                        <p class="text-gray-300 text-[11px] mt-0.5 font-mono"><span id="prevTicketId">TKT-1001</span> - <span id="prevFecha"></span></p>
+                    </div>
 
-                        <div class="space-y-1 text-brandDark pt-1">
-                            <p><strong>Ciudad:</strong> <span id="prevCiudad">-</span></p>
-                            <p><strong>Cliente:</strong> <span id="prevCliente">-</span></p>
-                            <p><strong>Placa:</strong> <span id="prevPlaca" class="uppercase font-bold text-amber-700">-</span></p>
-                            <p><strong>Kilometraje:</strong> <span id="prevKilometraje">-</span> Km</p>
-                        </div>
+                    <div class="space-y-1 text-brandDark pt-1">
+                        <p><strong>Ciudad:</strong> <span id="prevCiudad">-</span></p>
+                        <p><strong>Cliente:</strong> <span id="prevCliente">-</span></p>
+                        <p><strong>Placa:</strong> <span id="prevPlaca" class="uppercase font-bold text-amber-700">-</span></p>
+                        <p><strong>Kilometraje:</strong> <span id="prevKilometraje">-</span> Km</p>
+                        <p><strong>Asesor Comercial:</strong> <span id="prevAsesor">-</span></p>
+                    </div>
 
-                        <div class="border-t border-b border-gray-200 py-2">
-                            <table class="w-full text-left">
-                                <thead>
-                                    <tr class="text-gray-500 border-b border-gray-200">
-                                        <th class="pb-1">Servicio / Descripción</th>
-                                        <th class="pb-1 text-right">Unidades</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="prevItemsList">
-                                    <tr>
-                                        <td colspan="2" class="text-center text-gray-400 py-2">Sin servicios agregados</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="border-t border-b border-gray-200 py-2">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-gray-500 border-b border-gray-200">
+                                    <th class="pb-1 font-bold">Servicio / Descripción</th>
+                                    <th class="pb-1 text-right font-bold">Unidades</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prevItemsList">
+                                <tr>
+                                    <td colspan="2" class="text-center text-gray-400 py-2">Sin servicios agregados</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-                        <!-- VISTA PREVIA DE OBSERVACIONES -->
-                        <div id="prevObsContainer" class="hidden border-t border-gray-200 pt-2">
-                            <p class="font-bold text-gray-600">Observaciones:</p>
-                            <p id="prevObservaciones" class="text-gray-700 italic bg-amber-50 p-2 rounded border border-amber-200 text-[11px] mt-1"></p>
-                        </div>
+                    <div id="prevObsContainer" class="hidden border-t border-gray-200 pt-2">
+                        <p class="font-bold text-gray-600">Observaciones:</p>
+                        <p id="prevObservaciones" class="text-gray-700 italic bg-amber-50 p-2 rounded border border-amber-200 text-[11px] mt-1"></p>
+                    </div>
 
-                        <div class="text-center text-[10px] text-gray-500 pt-2 border-t border-gray-200">
-                            <p class="font-bold text-brandDark">Portal de Ingeniería & Producto</p>
-                            <p>Merquellantas & Merquepro - Control Interno</p>
-                        </div>
+                    <div class="text-center text-[10px] text-gray-500 pt-2 border-t border-gray-200">
+                        <p class="font-bold text-brandDark">Portal de Ingeniería & Producto</p>
+                        <p>Merquellantas & Merquepro - Control Interno</p>
                     </div>
                 </div>
             </div>
@@ -180,15 +188,15 @@
         </section>
     </main>
 
-    <!-- MODAL DE HISTORIAL Y FILTRO DE FECHAS -->
+    <!-- MODAL DE HISTORIAL -->
     <div id="modalHistorial" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl max-h-[90vh] flex flex-col">
+        <div class="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-4 pb-2 border-b">
                 <h3 class="text-lg font-bold text-brandDark">Resumen General de Tickets</h3>
                 <button onclick="cerrarModalHistorial()" class="text-gray-400 hover:text-black font-bold text-lg">&times;</button>
             </div>
 
-            <!-- Filtros de Fechas -->
+            <!-- Filtros -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 bg-gray-50 p-3 rounded-xl border">
                 <div>
                     <label class="block text-[10px] uppercase font-bold text-brandGray mb-1">Desde</label>
@@ -200,25 +208,24 @@
                 </div>
                 <div class="flex items-end gap-2">
                     <button onclick="filtrarHistorial()" class="flex-1 bg-brandDark text-brandYellow text-xs font-bold py-2 rounded-lg hover:bg-black">Filtrar</button>
-                    <button onclick="exportarExcel()" class="flex-1 bg-emerald-600 text-white text-xs font-bold py-2 rounded-lg hover:bg-emerald-700">📥 Exportar CSV</button>
+                    <button onclick="exportarExcel()" class="flex-1 bg-emerald-600 text-white text-xs font-bold py-2 rounded-lg hover:bg-emerald-700">📥 Exportar Excel</button>
                 </div>
             </div>
 
-            <!-- Tabla de Registros -->
+            <!-- Tabla -->
             <div class="flex-grow overflow-y-auto border rounded-xl">
                 <table class="w-full text-left text-xs">
                     <thead class="bg-brandDark text-white sticky top-0">
                         <tr>
+                            <th class="p-2.5">ID Ticket</th>
                             <th class="p-2.5">Fecha</th>
                             <th class="p-2.5">Placa</th>
                             <th class="p-2.5">Cliente</th>
-                            <th class="p-2.5">Ciudad</th>
-                            <th class="p-2.5">Servicios (Unidades)</th>
+                            <th class="p-2.5">Asesor</th>
+                            <th class="p-2.5">Servicios</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaHistorialBody" class="divide-y divide-gray-100">
-                        <!-- Registros cargados por JS -->
-                    </tbody>
+                    <tbody id="tablaHistorialBody" class="divide-y divide-gray-100"></tbody>
                 </table>
             </div>
 
@@ -228,9 +235,8 @@
         </div>
     </div>
 
-    <!-- SCRIPT DE FUNCIONAMIENTO -->
+    <!-- SCRIPT PRINCIPAL -->
     <script>
-        // LISTA DE SERVICIOS CONFIGURADA (Fácilmente extensible)
         const SERVICIOS_DISPONIBLES = [
             "Montaje Camion",
             "Montaje Automovil",
@@ -245,18 +251,27 @@
             "Inspeccion de Baterias"
         ];
 
-        // Establecer fecha actual por defecto
         document.getElementById('fecha').valueAsDate = new Date();
 
-        // Escuchar cambios en los inputs principales
-        const inputs = ['fecha', 'ciudad', 'cliente', 'placa', 'kilometraje', 'observaciones'];
+        function obtenerSiguienteId() {
+            let ultimoId = parseInt(localStorage.getItem('consecutivo_ticket') || '1000');
+            return ultimoId + 1;
+        }
+
+        function actualizarConsecutivoPantalla() {
+            const idActual = `TKT-${obtenerSiguienteId()}`;
+            document.getElementById('lblConsecutivo').innerText = idActual;
+            document.getElementById('prevTicketId').innerText = idActual;
+        }
+
+        const inputs = ['fecha', 'ciudad', 'cliente', 'placa', 'kilometraje', 'asesor', 'observaciones'];
         inputs.forEach(id => {
             document.getElementById(id).addEventListener('input', actualizarVistaPrevia);
         });
 
-        // Agregar primer servicio vacío por defecto al cargar
         window.addEventListener('DOMContentLoaded', () => {
             agregarItem();
+            actualizarConsecutivoPantalla();
             actualizarVistaPrevia();
         });
 
@@ -306,8 +321,8 @@
             document.getElementById('prevCliente').innerText = document.getElementById('cliente').value || '-';
             document.getElementById('prevPlaca').innerText = document.getElementById('placa').value || '-';
             document.getElementById('prevKilometraje').innerText = document.getElementById('kilometraje').value || '-';
+            document.getElementById('prevAsesor').innerText = document.getElementById('asesor').value || '-';
 
-            // Actualizar Observaciones
             const obsText = document.getElementById('observaciones').value.trim();
             const prevObsContainer = document.getElementById('prevObsContainer');
             if (obsText) {
@@ -317,7 +332,6 @@
                 prevObsContainer.classList.add('hidden');
             }
 
-            // Actualizar Tabla de Servicios
             const items = obtenerItems();
             const listBody = document.getElementById('prevItemsList');
             
@@ -330,60 +344,132 @@
             items.forEach(item => {
                 html += `
                     <tr class="border-b border-gray-100">
-                        <td class="py-1">${item.tipo}</td>
-                        <td class="py-1 text-right font-bold">${item.unidades}</td>
+                        <td class="py-1.5 text-gray-800">${item.tipo}</td>
+                        <td class="py-1.5 text-right font-bold text-gray-900">${item.unidades}</td>
                     </tr>
                 `;
             });
             listBody.innerHTML = html;
         }
 
-        // GENERACIÓN AVANZADA DE PDF CON LOGOS
-        async function generarYDescargarPDF() {
-            const placa = document.getElementById('placa').value.toUpperCase();
+        // GENERADOR VECTORIAL NÍTIDO EN PDF
+        function generarYDescargarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: [90, 160] });
+
+            const ticketId = document.getElementById('lblConsecutivo').innerText;
             const fecha = document.getElementById('fecha').value;
+            const ciudad = document.getElementById('ciudad').value;
+            const cliente = document.getElementById('cliente').value;
+            const placa = document.getElementById('placa').value.toUpperCase();
+            const km = document.getElementById('kilometraje').value;
+            const asesor = document.getElementById('asesor').value;
+            const obs = document.getElementById('observaciones').value.trim();
             const items = obtenerItems();
 
             if(!placa || items.length === 0) {
-                alert("Por favor completa al menos la placa y selecciona un servicio.");
+                alert("Completa la placa y al menos un servicio antes de generar el PDF.");
                 return;
             }
 
-            const element = document.getElementById('ticketPreview');
+            // Encabezado Oscuro
+            doc.setFillColor(34, 31, 31);
+            doc.rect(0, 0, 90, 22, 'F');
+            doc.setFillColor(245, 169, 11);
+            doc.rect(0, 22, 90, 2, 'F');
 
-            try {
-                const canvas = await html2canvas(element, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: "#ffffff"
-                });
+            // Texto Header
+            doc.setTextColor(245, 169, 11);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.text("CONTROL DE SERVICIOS", 45, 11, { align: "center" });
 
-                const imgData = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf;
-                
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: [80, (canvas.height * 80) / canvas.width]
-                });
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${ticketId}  |  ${fecha}`, 45, 17, { align: "center" });
 
-                pdf.addImage(imgData, 'PNG', 0, 0, 80, (canvas.height * 80) / canvas.width);
-                pdf.save(`Ticket_${placa}_${fecha}.pdf`);
-            } catch (err) {
-                alert("Ocurrió un detalle al renderizar el PDF. Asegúrate de que las imágenes estén subidas en tu repositorio.");
-                console.error(err);
+            // Datos Principales
+            let y = 30;
+            doc.setTextColor(34, 31, 31);
+            doc.setFontSize(9);
+
+            const escribirLinea = (label, valor) => {
+                doc.setFont("helvetica", "bold");
+                doc.text(label, 6, y);
+                doc.setFont("helvetica", "normal");
+                doc.text(valor || '-', 38, y);
+                y += 5.5;
+            };
+
+            escribirLinea("Ciudad:", ciudad);
+            escribirLinea("Cliente:", cliente);
+            escribirLinea("Placa:", placa);
+            escribirLinea("Kilometraje:", km ? `${km} Km` : '-');
+            escribirLinea("Asesor:", asesor);
+
+            y += 2;
+            doc.setDrawColor(200, 200, 200);
+            doc.line(6, y, 84, y);
+            y += 6;
+
+            // Tabla de Servicios
+            doc.setFont("helvetica", "bold");
+            doc.text("Servicio / Descripción", 6, y);
+            doc.text("Unidades", 84, y, { align: "right" });
+            y += 3;
+            doc.line(6, y, 84, y);
+            y += 5;
+
+            doc.setFont("helvetica", "normal");
+            items.forEach(item => {
+                doc.text(item.tipo, 6, y);
+                doc.setFont("helvetica", "bold");
+                doc.text(String(item.unidades), 84, y, { align: "right" });
+                doc.setFont("helvetica", "normal");
+                y += 5.5;
+            });
+
+            y += 2;
+            doc.line(6, y, 84, y);
+            y += 5;
+
+            // Observaciones
+            if (obs) {
+                doc.setFont("helvetica", "bold");
+                doc.text("Observaciones:", 6, y);
+                y += 4;
+                doc.setFont("helvetica", "italic");
+                doc.setFontSize(8);
+                const splitObs = doc.splitTextToSize(obs, 76);
+                doc.text(splitObs, 6, y);
+                y += (splitObs.length * 4) + 3;
+                doc.setFontSize(9);
+                doc.setFont("helvetica", "normal");
             }
+
+            // Pie de página
+            doc.setFontSize(7);
+            doc.setTextColor(120, 120, 120);
+            doc.text("Portal de Ingeniería & Producto", 45, y + 4, { align: "center" });
+            doc.text("Merquellantas & Merquepro - Control Interno", 45, y + 8, { align: "center" });
+
+            doc.save(`Ticket_${ticketId}_${placa}.pdf`);
         }
 
         // Guardar Registro en localStorage
         function guardarRegistro() {
+            const nextNum = obtenerSiguienteId();
+            const ticketId = `TKT-${nextNum}`;
+
             const servicioData = {
+                ticketId: ticketId,
                 fecha: document.getElementById('fecha').value,
                 ciudad: document.getElementById('ciudad').value,
                 cliente: document.getElementById('cliente').value,
                 placa: document.getElementById('placa').value.toUpperCase(),
                 kilometraje: document.getElementById('kilometraje').value,
+                asesor: document.getElementById('asesor').value,
                 observaciones: document.getElementById('observaciones').value,
                 items: obtenerItems()
             };
@@ -396,11 +482,13 @@
             let historial = JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
             historial.push(servicioData);
             localStorage.setItem('historial_merquellantas', JSON.stringify(historial));
+            localStorage.setItem('consecutivo_ticket', nextNum.toString());
 
-            alert("¡Servicio registrado exitosamente!");
+            alert(`¡Ticket ${ticketId} guardado exitosamente!`);
             document.getElementById('serviceForm').reset();
             document.getElementById('fecha').valueAsDate = new Date();
             document.getElementById('itemsContainer').innerHTML = '';
+            actualizarConsecutivoPantalla();
             agregarItem();
             actualizarVistaPrevia();
         }
@@ -421,7 +509,7 @@
             let historial = filtrados || JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
             
             if(historial.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-400 py-4">No hay registros guardados</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-400 py-4">No hay registros guardados</td></tr>`;
                 return;
             }
 
@@ -430,10 +518,11 @@
                 let descItems = reg.items.map(i => `${i.tipo} (${i.unidades})`).join(', ');
                 html += `
                     <tr class="hover:bg-gray-50 border-b border-gray-100">
+                        <td class="p-2.5 font-bold text-amber-700">${reg.ticketId || '-'}</td>
                         <td class="p-2.5 font-medium">${reg.fecha}</td>
-                        <td class="p-2.5 font-bold text-amber-600">${reg.placa}</td>
+                        <td class="p-2.5 font-bold">${reg.placa}</td>
                         <td class="p-2.5">${reg.cliente}</td>
-                        <td class="p-2.5">${reg.ciudad}</td>
+                        <td class="p-2.5">${reg.asesor || '-'}</td>
                         <td class="p-2.5 text-gray-600">${descItems}</td>
                     </tr>
                 `;
@@ -452,6 +541,7 @@
             cargarTablaHistorial(historial);
         }
 
+        // EXPORTACIÓN A EXCEL / CSV CON FILAS SEPARADAS POR SERVICIO
         function exportarExcel() {
             let historial = JSON.parse(localStorage.getItem('historial_merquellantas') || '[]');
             if(historial.length === 0) {
@@ -459,18 +549,31 @@
                 return;
             }
 
-            let csvContent = "data:text/csv;charset=utf-8,Fecha,Ciudad,Cliente,Placa,Kilometraje,Servicios,Observaciones\r\n";
+            let csvContent = "data:text/csv;charset=utf-8,ID Ticket,Fecha,Ciudad,Cliente,Placa,Kilometraje,Asesor Comercial,Servicio,Unidades,Observaciones\r\n";
+            
             historial.forEach(reg => {
-                let descItems = reg.items.map(i => `${i.tipo} [Unid: ${i.unidades}]`).join(' | ');
-                let obsEscapada = reg.observaciones ? `"${reg.observaciones.replace(/"/g, '""')}"` : '""';
-                let row = [reg.fecha, reg.ciudad, `"${reg.cliente}"`, reg.placa, reg.kilometraje, `"${descItems}"`, obsEscapada];
-                csvContent += row.join(",") + "\r\n";
+                let tId = reg.ticketId || '';
+                let f = reg.fecha || '';
+                let c = reg.ciudad || '';
+                let cli = `"${(reg.cliente || '').replace(/"/g, '""')}"`;
+                let p = reg.placa || '';
+                let km = reg.kilometraje || '';
+                let ase = `"${(reg.asesor || '').replace(/"/g, '""')}"`;
+                let obs = `"${(reg.observaciones || '').replace(/"/g, '""')}"`;
+
+                // Crear una fila independiente por cada servicio realizado
+                reg.items.forEach(item => {
+                    let servNombre = `"${item.tipo.replace(/"/g, '""')}"`;
+                    let servUnidades = item.unidades;
+                    let row = [tId, f, c, cli, p, km, ase, servNombre, servUnidades, obs];
+                    csvContent += row.join(",") + "\r\n";
+                });
             });
 
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "resumen_servicios_merquellantas.csv");
+            link.setAttribute("download", "reporte_servicios_merquellantas.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
