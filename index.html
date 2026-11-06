@@ -28,7 +28,7 @@
     <!-- HEADER INSTITUCIONAL -->
     <header class="bg-brandDark text-white shadow-md border-b-4 border-brandYellow">
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4 bg-white px-3 py-1.5 rounded-lg">
+            <div class="flex items-center gap-4 bg-white px-3 py-1.5 rounded-lg shadow">
                 <img id="imgLogo1" src="LOGO MERQUELLANTAS sobre blanco.png" alt="Merquellantas" class="h-10 object-contain">
                 <div class="h-8 w-px bg-gray-300"></div>
                 <img id="imgLogo2" src="logo merquepro.png" alt="Merquepro" class="h-10 object-contain">
@@ -50,7 +50,7 @@
                     <h2 class="text-lg font-bold text-brandDark flex items-center gap-2">
                         <span class="bg-brandYellow text-brandDark px-2 py-0.5 rounded text-sm">1</span> Datos del Servicio
                     </h2>
-                    <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded border border-amber-200">
+                    <span class="text-xs font-bold text-brandDark bg-brandYellow/20 px-2.5 py-1 rounded border border-brandYellow">
                         N° <span id="lblConsecutivo">TKT-1001</span>
                     </span>
                 </div>
@@ -131,22 +131,22 @@
                     <span class="text-xs bg-brandLight text-brandGray px-2 py-1 rounded font-medium">Control Interno</span>
                 </div>
 
-                <!-- TICKETS PREVIEW (FORMATO LIMPIO Y LEGIBLE) -->
-                <div id="ticketPreview" class="border border-gray-300 bg-gray-50 p-4 rounded-xl font-sans text-xs space-y-3">
-                    <div class="text-center border-b border-gray-200 pb-3 bg-brandDark text-white -m-4 mb-3 p-4 rounded-t-xl border-b-4 border-brandYellow">
-                        <div class="flex justify-center items-center gap-3 mb-2 bg-white p-2 rounded-lg max-w-[220px] mx-auto">
-                            <img src="LOGO MERQUELLANTAS sobre blanco.png" alt="Logo" class="h-7 object-contain">
-                            <div class="h-6 w-px bg-gray-300"></div>
-                            <img src="logo merquepro.png" alt="Pro" class="h-7 object-contain">
+                <!-- TICKET PREVIEW CON FONDO BLANCO Y ACENTOS AMARILLOS -->
+                <div id="ticketPreview" class="border-2 border-brandYellow bg-white p-5 rounded-xl font-sans text-xs space-y-3 shadow-sm">
+                    <div class="text-center border-b-2 border-brandYellow pb-3 mb-3">
+                        <div class="flex justify-center items-center gap-3 mb-2 bg-gray-50 p-2 rounded-lg border max-w-[240px] mx-auto">
+                            <img src="LOGO MERQUELLANTAS sobre blanco.png" alt="Logo" class="h-6 object-contain">
+                            <div class="h-5 w-px bg-gray-300"></div>
+                            <img src="logo merquepro.png" alt="Pro" class="h-6 object-contain">
                         </div>
-                        <p class="font-bold text-sm tracking-wide text-brandYellow">CONTROL DE SERVICIOS</p>
-                        <p class="text-gray-300 text-[11px] mt-0.5 font-mono"><span id="prevTicketId">TKT-1001</span> - <span id="prevFecha"></span></p>
+                        <p class="font-black text-sm tracking-wide text-brandDark">CONTROL DE SERVICIOS</p>
+                        <p class="text-brandGray text-[11px] mt-0.5 font-mono font-bold"><span id="prevTicketId">TKT-1001</span> | <span id="prevFecha"></span></p>
                     </div>
 
                     <div class="space-y-1 text-brandDark pt-1">
                         <p><strong>Ciudad:</strong> <span id="prevCiudad">-</span></p>
                         <p><strong>Cliente:</strong> <span id="prevCliente">-</span></p>
-                        <p><strong>Placa:</strong> <span id="prevPlaca" class="uppercase font-bold text-amber-700">-</span></p>
+                        <p><strong>Placa:</strong> <span id="prevPlaca" class="uppercase font-extrabold text-amber-600">-</span></p>
                         <p><strong>Kilometraje:</strong> <span id="prevKilometraje">-</span> Km</p>
                         <p><strong>Asesor Comercial:</strong> <span id="prevAsesor">-</span></p>
                     </div>
@@ -154,7 +154,7 @@
                     <div class="border-t border-b border-gray-200 py-2">
                         <table class="w-full text-left">
                             <thead>
-                                <tr class="text-gray-500 border-b border-gray-200">
+                                <tr class="text-brandGray border-b border-gray-200">
                                     <th class="pb-1 font-bold">Servicio / Descripción</th>
                                     <th class="pb-1 text-right font-bold">Unidades</th>
                                 </tr>
@@ -168,11 +168,11 @@
                     </div>
 
                     <div id="prevObsContainer" class="hidden border-t border-gray-200 pt-2">
-                        <p class="font-bold text-gray-600">Observaciones:</p>
-                        <p id="prevObservaciones" class="text-gray-700 italic bg-amber-50 p-2 rounded border border-amber-200 text-[11px] mt-1"></p>
+                        <p class="font-bold text-brandGray">Observaciones:</p>
+                        <p id="prevObservaciones" class="text-brandDark italic bg-amber-50 p-2 rounded border border-brandYellow/40 text-[11px] mt-1"></p>
                     </div>
 
-                    <div class="text-center text-[10px] text-gray-500 pt-2 border-t border-gray-200">
+                    <div class="text-center text-[10px] text-brandGray pt-2 border-t border-gray-100">
                         <p class="font-bold text-brandDark">Portal de Ingeniería & Producto</p>
                         <p>Merquellantas & Merquepro - Control Interno</p>
                     </div>
@@ -344,15 +344,30 @@
             items.forEach(item => {
                 html += `
                     <tr class="border-b border-gray-100">
-                        <td class="py-1.5 text-gray-800">${item.tipo}</td>
-                        <td class="py-1.5 text-right font-bold text-gray-900">${item.unidades}</td>
+                        <td class="py-1.5 text-brandDark font-medium">${item.tipo}</td>
+                        <td class="py-1.5 text-right font-bold text-brandDark">${item.unidades}</td>
                     </tr>
                 `;
             });
             listBody.innerHTML = html;
         }
 
-        // GENERADOR VECTORIAL NÍTIDO EN PDF
+        // FUNCIÓN AUXILIAR PARA CONVERTIR IMAGEN A BASE64
+        function toDataURL(url, callback) {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = function() {
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    callback(reader.result);
+                }
+                reader.readAsDataURL(xhr.response);
+            };
+            xhr.open('GET', url);
+            xhr.responseType = 'blob';
+            xhr.send();
+        }
+
+        // GENERADOR DE PDF CON FONDO BLANCO Y LOGOS INCORPORADOS
         function generarYDescargarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ unit: 'mm', format: [90, 160] });
@@ -372,89 +387,110 @@
                 return;
             }
 
-            // Encabezado Oscuro
-            doc.setFillColor(34, 31, 31);
-            doc.rect(0, 0, 90, 22, 'F');
-            doc.setFillColor(245, 169, 11);
-            doc.rect(0, 22, 90, 2, 'F');
+            // Intentar incrustar logos y generar PDF
+            toDataURL('LOGO MERQUELLANTAS sobre blanco.png', function(logo1Data) {
+                toDataURL('logo merquepro.png', function(logo2Data) {
+                    
+                    // Fondo Blanco Total con Marco Amarillo
+                    doc.setFillColor(255, 255, 255);
+                    doc.rect(0, 0, 90, 160, 'F');
+                    
+                    doc.setDrawColor(245, 169, 11);
+                    doc.setLineWidth(0.8);
+                    doc.rect(3, 3, 84, 154);
 
-            // Texto Header
-            doc.setTextColor(245, 169, 11);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(11);
-            doc.text("CONTROL DE SERVICIOS", 45, 11, { align: "center" });
+                    // Cabecera blanca con acento amarillo
+                    doc.setFillColor(245, 169, 11);
+                    doc.rect(3, 3, 84, 22, 'F');
+                    doc.setFillColor(255, 255, 255);
+                    doc.rect(4, 4, 82, 20, 'F');
 
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            doc.text(`${ticketId}  |  ${fecha}`, 45, 17, { align: "center" });
+                    // Agregar Logos en el PDF
+                    try {
+                        doc.addImage(logo1Data, 'PNG', 12, 6, 26, 10);
+                        doc.addImage(logo2Data, 'PNG', 52, 6, 26, 10);
+                    } catch(e) {
+                        console.log("No se pudieron cargar las imágenes de los logos:", e);
+                    }
 
-            // Datos Principales
-            let y = 30;
-            doc.setTextColor(34, 31, 31);
-            doc.setFontSize(9);
+                    // Título institucional
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(10);
+                    doc.setTextColor(34, 31, 31);
+                    doc.text("CONTROL DE SERVICIOS", 45, 18, { align: "center" });
 
-            const escribirLinea = (label, valor) => {
-                doc.setFont("helvetica", "bold");
-                doc.text(label, 6, y);
-                doc.setFont("helvetica", "normal");
-                doc.text(valor || '-', 38, y);
-                y += 5.5;
-            };
+                    doc.setFontSize(8);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(`${ticketId}  |  ${fecha}`, 45, 22, { align: "center" });
 
-            escribirLinea("Ciudad:", ciudad);
-            escribirLinea("Cliente:", cliente);
-            escribirLinea("Placa:", placa);
-            escribirLinea("Kilometraje:", km ? `${km} Km` : '-');
-            escribirLinea("Asesor:", asesor);
+                    // Datos Principales
+                    let y = 30;
+                    doc.setFontSize(9);
+                    doc.setTextColor(34, 31, 31);
 
-            y += 2;
-            doc.setDrawColor(200, 200, 200);
-            doc.line(6, y, 84, y);
-            y += 6;
+                    const escribirLinea = (label, valor) => {
+                        doc.setFont("helvetica", "bold");
+                        doc.text(label, 8, y);
+                        doc.setFont("helvetica", "normal");
+                        doc.text(valor || '-', 40, y);
+                        y += 5.5;
+                    };
 
-            // Tabla de Servicios
-            doc.setFont("helvetica", "bold");
-            doc.text("Servicio / Descripción", 6, y);
-            doc.text("Unidades", 84, y, { align: "right" });
-            y += 3;
-            doc.line(6, y, 84, y);
-            y += 5;
+                    escribirLinea("Ciudad:", ciudad);
+                    escribirLinea("Cliente:", cliente);
+                    escribirLinea("Placa:", placa);
+                    escribirLinea("Kilometraje:", km ? `${km} Km` : '-');
+                    escribirLinea("Asesor:", asesor);
 
-            doc.setFont("helvetica", "normal");
-            items.forEach(item => {
-                doc.text(item.tipo, 6, y);
-                doc.setFont("helvetica", "bold");
-                doc.text(String(item.unidades), 84, y, { align: "right" });
-                doc.setFont("helvetica", "normal");
-                y += 5.5;
+                    y += 2;
+                    doc.setDrawColor(220, 220, 220);
+                    doc.line(8, y, 82, y);
+                    y += 6;
+
+                    // Tabla de Servicios
+                    doc.setFont("helvetica", "bold");
+                    doc.text("Servicio / Descripción", 8, y);
+                    doc.text("Unidades", 82, y, { align: "right" });
+                    y += 3;
+                    doc.line(8, y, 82, y);
+                    y += 5;
+
+                    doc.setFont("helvetica", "normal");
+                    items.forEach(item => {
+                        doc.text(item.tipo, 8, y);
+                        doc.setFont("helvetica", "bold");
+                        doc.text(String(item.unidades), 82, y, { align: "right" });
+                        doc.setFont("helvetica", "normal");
+                        y += 5.5;
+                    });
+
+                    y += 2;
+                    doc.line(8, y, 82, y);
+                    y += 5;
+
+                    // Observaciones
+                    if (obs) {
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Observaciones:", 8, y);
+                        y += 4;
+                        doc.setFont("helvetica", "italic");
+                        doc.setFontSize(8);
+                        const splitObs = doc.splitTextToSize(obs, 74);
+                        doc.text(splitObs, 8, y);
+                        y += (splitObs.length * 4) + 3;
+                        doc.setFontSize(9);
+                        doc.setFont("helvetica", "normal");
+                    }
+
+                    // Pie de página
+                    doc.setFontSize(7);
+                    doc.setTextColor(120, 120, 120);
+                    doc.text("Portal de Ingeniería & Producto", 45, 145, { align: "center" });
+                    doc.text("Merquellantas & Merquepro - Control Interno", 45, 149, { align: "center" });
+
+                    doc.save(`Ticket_${ticketId}_${placa}.pdf`);
+                });
             });
-
-            y += 2;
-            doc.line(6, y, 84, y);
-            y += 5;
-
-            // Observaciones
-            if (obs) {
-                doc.setFont("helvetica", "bold");
-                doc.text("Observaciones:", 6, y);
-                y += 4;
-                doc.setFont("helvetica", "italic");
-                doc.setFontSize(8);
-                const splitObs = doc.splitTextToSize(obs, 76);
-                doc.text(splitObs, 6, y);
-                y += (splitObs.length * 4) + 3;
-                doc.setFontSize(9);
-                doc.setFont("helvetica", "normal");
-            }
-
-            // Pie de página
-            doc.setFontSize(7);
-            doc.setTextColor(120, 120, 120);
-            doc.text("Portal de Ingeniería & Producto", 45, y + 4, { align: "center" });
-            doc.text("Merquellantas & Merquepro - Control Interno", 45, y + 8, { align: "center" });
-
-            doc.save(`Ticket_${ticketId}_${placa}.pdf`);
         }
 
         // Guardar Registro en localStorage
@@ -518,7 +554,7 @@
                 let descItems = reg.items.map(i => `${i.tipo} (${i.unidades})`).join(', ');
                 html += `
                     <tr class="hover:bg-gray-50 border-b border-gray-100">
-                        <td class="p-2.5 font-bold text-amber-700">${reg.ticketId || '-'}</td>
+                        <td class="p-2.5 font-bold text-amber-600">${reg.ticketId || '-'}</td>
                         <td class="p-2.5 font-medium">${reg.fecha}</td>
                         <td class="p-2.5 font-bold">${reg.placa}</td>
                         <td class="p-2.5">${reg.cliente}</td>
@@ -561,7 +597,6 @@
                 let ase = `"${(reg.asesor || '').replace(/"/g, '""')}"`;
                 let obs = `"${(reg.observaciones || '').replace(/"/g, '""')}"`;
 
-                // Crear una fila independiente por cada servicio realizado
                 reg.items.forEach(item => {
                     let servNombre = `"${item.tipo.replace(/"/g, '""')}"`;
                     let servUnidades = item.unidades;
